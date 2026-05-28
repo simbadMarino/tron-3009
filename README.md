@@ -5,7 +5,6 @@ For technical details check https://eips.ethereum.org/EIPS/eip-3009
 
 ⚠️ Caution: This is by no means production-ready, proceed with caution and perform all necesary testing and audits before using in production.
 
-
 ## Configure your ERC3009 token
 
 Make sure to modify the token name, token symbol and supply in 3009token.sol SC
@@ -18,10 +17,7 @@ To compile your contracts, use the following command:
 tronbox compile contracts/TRC3009Token.sol
 ```
 
-
-
 ## Deploy Nile Testnet
-
 
 Obtain test coin at https://nileex.io/join/getJoinPage
 
@@ -31,31 +27,39 @@ To deploy your contracts to Nile Testnet, you can run the following:
 tronbox deploy --network nile
 ```
 
-
 ### Quick Start: Testing transferWithAuthorization
 
 1. Prepare your PK, be extra careful with mainnet Private keys
+
 ```shell
 cd sample-env .env
 nano .env
 ```
 
 1. Compile your contract
+
 ```shell
 tronbox compile contracts/TRC3009Token.sol
 ```
+
 2. Deploy your contract
+
 ```shell
 tronbox deploy --network nile
 ```
+
 3. Edit the erc3009 signature script per your deployed contract address, network, "to" address, etc
+
 ```shell
 nano utils/erc3009_signature_script.js
 ```
+
 4. Execute the script
+
 ```shell
 node utils/erc3009_signature_script.js
 ```
+
 Expected output should be similar to:
 
 ```js
@@ -71,5 +75,15 @@ Expected output should be similar to:
   s: '0x164bd21e436727ac6640d58ad5b4047097fff15c49d569a7a9f6ea852be4fd34'
 }
 ```
+
 5. Execute transferWithAuthorization function using the output from step 3
 
+First Run:
+
+![1780008084756](images/README/1780008084756.png)
+
+
+
+Second run (should fail):
+
+![1780008121815](images/README/1780008121815.png)
