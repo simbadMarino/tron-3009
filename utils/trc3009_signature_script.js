@@ -11,7 +11,7 @@ const tronWeb = new TronWeb({
 // Example values
 const from = tronWeb.defaultAddress.base58;
 const to = "TPxe5NN49YEGFNpDQZUXpViJ8B4c2BmL7f";    //Choose any "to" address to test
-const value = "1000000000000000000";         // 1 token with 6 decimals
+const value = "1000000000000000000";         // 1 token with 18 decimals
 const validAfter = Math.floor(Date.now() / 1000);            // now
 const validBefore = Math.floor(Date.now() / 1000) + 3600;     // +1h
 // generate 32 random bytes
@@ -23,12 +23,12 @@ const nonce = "0x" + randomBytes.toString("hex");
 // Select the specific chainId depending on the network. https://chainlist.org/?testnets=true&search=TRON
 
 const domain = {
-    name: "TR3009 Token",       //Your token name here
+    name: "My3009Token",       //Your token name here
     version: "1",
     chainId: 0xcd8690dc,        // TRON Nile testnet
     // chainId: 0x2b6653dc,        //TRON Mainnet
     //chainId: 0x94a9059e,        //TRON Shasta testnet                      
-    verifyingContract: "TJSmpBinnjBfzhuJb2sdFzXbodhiLCC1YX"     //Your ERC3009 token address after deployment here
+    verifyingContract: "TGcS9Rvkpdh1vum2ZNQUxMB1DJ533reHdX"     //Your ERC3009 token address after deployment here
 };
 
 const types = {
