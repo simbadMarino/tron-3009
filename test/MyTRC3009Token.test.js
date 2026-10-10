@@ -7,13 +7,23 @@ const MyTRC3009Token = artifacts.require('MyTRC3009Token');
 //   docker run -it -p 9090:9090 --rm --name tron tronbox/tre
 //   npx tronbox test --network development
 // 
+// Run against Nile (needs PRIVATE_KEY_NILE in .env, funded with test TRX; deploys a fresh token):
+//   npx tronbox test --network nile
+//
+// The suite detects which kind of network it is on (local TRE vs. a public network such as Nile):
+//   - local TRE: blocks are mined instantly and accounts[1] exists, so calls are not awaited for confirmation.
+//   - public network: blocks take ~3s, so every sent transaction is awaited before reading state, and only
+//     accounts[0] exists, so the recipient is a generated address.
+//
 // The authorizer is a freshly generated key that never sends a transaction (it only signs),
 // so it needs no TRX. The default account (accounts[0], the token owner) acts as the relayer.
 
 contract('MyTRC3009Token', accounts => {
   const owner = accounts[0];  //Development network
-  console.log(owner);
-  const recipient = accounts[1];
+  // TRE runs on localhost; anything else (Nile, Shasta, ...) is a public network with ~3s blocks.
+  const IS_LOCAL = /127\.0\.0\.1|localhost/.test(String(tronWeb.fullNode.host));
+  // A public network only exposes the single account behind the configured private key.
+  const recipient = IS_LOCAL ? accounts[1] : require('tronweb').TronWeb.createRandom().address;
   const MINT_AMOUNT = '1000000000000000000000'; // 1000 tokens (18 decimals)
   const VALUE = '1000000000000000000'; // 1 token
   const FAR_FUTURE = 2 ** 40; // below the 2^47 block-range flag, so the timestamp clock is used
@@ -40,6 +50,13 @@ contract('MyTRC3009Token', accounts => {
       { name: 'nonce', type: 'bytes32' }
     ]
   };
+
+  // Verbatim log lines, indented under mocha's test titles. Every transaction id is logged so any step can be
+  // looked up in the node / explorer (on a public network the explorer link is printed too).
+  const log = (...args) => console.log('        ', ...args);
+  const txLink = txid => (IS_LOCAL ? '' : `  https://${NETWORK_NAME}.tronscan.org/#/transaction/${txid}`);
+  const NETWORK_NAME = IS_LOCAL ? 'local' : /nile/i.test(String(tronWeb.fullNode.host)) ? 'nile'
+    : /shasta/i.test(String(tronWeb.fullNode.host)) ? 'shasta' : 'mainnet';
 
   let token;
   let domain;
@@ -75,6 +92,37 @@ contract('MyTRC3009Token', accounts => {
 
   const balanceOf = async account => (await token.balanceOf(account)).toString();
 
+  // Polls until the transaction is in a block (returns its info, which may show a revert). Uses the
+  // full-node (unconfirmed) lookup: trx.getTransactionInfo queries the solidity node, which only reports a
+  // transaction once its block is solidified (~19 blocks, i.e. a minute on Nile). Reads like balanceOf also
+  // run against the full node's latest block, so waiting for inclusion is enough. Results are cached so
+  // waiting on the same txid twice (send() and then expectRevert()) costs nothing.
+  const txInfoCache = new Map();
+  const waitForTx = async txid => {
+    if (txInfoCache.has(txid)) return txInfoCache.get(txid);
+    const intervalMs = IS_LOCAL ? 500 : 1000;
+    const maxWaitMs = IS_LOCAL ? 30000 : 60000;
+    let info = {};
+    for (let waited = 0; !info.id && waited < maxWaitMs; waited += intervalMs) {
+      info = await tronWeb.trx.getUnconfirmedTransactionInfo(txid);
+      if (!info.id) await new Promise(resolve => setTimeout(resolve, intervalMs));
+    }
+    if (info.id) txInfoCache.set(txid, info);
+    return info;
+  };
+
+  // Sends a state-changing call. On a public network the call only returns the txid once broadcast, so wait
+  // for the block before the test reads state; on TRE blocks are instant and no wait is needed.
+  const send = async (txPromise, label = 'transaction') => {
+    const txid = await txPromise;
+    log(`[tx] ${label} txid: ${txid}${txLink(txid)}`);
+    if (!IS_LOCAL) {
+      const info = await waitForTx(txid);
+      log(`     block: ${info.blockNumber}  result: ${info.result || (info.receipt && info.receipt.result) || 'SUCCESS'}  energy: ${info.receipt && info.receipt.energy_usage_total}  fee(sun): ${info.fee}`);
+    }
+    return txid;
+  };
+
   // TronBox resolves a state-changing call with the txid even when the transaction reverts, so wait for
   // the receipt and check it failed with the expected custom error (matched by its 4-byte selector).
   const expectRevert = async (txPromise, errorSignature) => {
@@ -83,17 +131,21 @@ contract('MyTRC3009Token', accounts => {
       txid = await txPromise;
     } catch (err) {
       // Some failures are rejected up front (e.g. during energy estimation); that is a revert too.
+      log(`[revert] rejected before broadcast (expected ${errorSignature}): ${err.message || err}`);
       return err;
     }
 
-    let info = {};
-    for (let i = 0; i < 20 && !info.id; i++) {
-      info = await tronWeb.trx.getTransactionInfo(txid);
-      if (!info.id) await new Promise(resolve => setTimeout(resolve, 500));
-    }
+    const info = await waitForTx(txid);
 
-    assert.equal(info.result, 'FAILED', 'expected the transaction to revert');
+    assert.ok(info.id, `transaction ${txid} was not found after waiting (is it confirmed on this network?)`);
+    // Failed transactions report `result: 'FAILED'`; the receipt carries the reason (REVERT, OUT_OF_ENERGY, ...).
+    const failed = info.result === 'FAILED' || (info.receipt && info.receipt.result && info.receipt.result !== 'SUCCESS');
+    assert.ok(failed, `expected the transaction to revert, got: ${JSON.stringify(info)}`);
     const selector = tronWeb.sha3(errorSignature).slice(2, 10); // sha3 returns 0x-prefixed keccak256
+    log(`[revert] txid: ${txid}`);
+    log(`     result: ${info.result}  receipt: ${info.receipt && info.receipt.result}  block: ${info.blockNumber}`);
+    log(`     expected: ${errorSignature} (selector 0x${selector})`);
+    log(`     contractResult: ${info.contractResult && info.contractResult[0]}`);
     assert.ok(
       (info.contractResult[0] || '').startsWith(selector),
       `expected revert with ${errorSignature}, got ${info.contractResult[0]}`
@@ -102,10 +154,21 @@ contract('MyTRC3009Token', accounts => {
   };
 
   const transfer = (a, { v, r, s }) =>
-    token.transferWithAuthorization(a.from, a.to, a.value, a.validAfter, a.validBefore, a.nonce, v, r, s);
+    send(
+      token.transferWithAuthorization(a.from, a.to, a.value, a.validAfter, a.validBefore, a.nonce, v, r, s),
+      'transferWithAuthorization'
+    );
 
   const receive = (a, { v, r, s }) =>
-    token.receiveWithAuthorization(a.from, a.to, a.value, a.validAfter, a.validBefore, a.nonce, v, r, s);
+    send(
+      token.receiveWithAuthorization(a.from, a.to, a.value, a.validAfter, a.validBefore, a.nonce, v, r, s),
+      'receiveWithAuthorization'
+    );
+
+  const cancel = (authorizer, nonce, { v, r, s }) =>
+    send(token.cancelAuthorization(authorizer, nonce, v, r, s), 'cancelAuthorization');
+
+  const mint = (to, amount) => send(token.mint(to, amount), 'mint');
 
   before(async () => {
     token = await MyTRC3009Token.deployed();
@@ -119,11 +182,46 @@ contract('MyTRC3009Token', accounts => {
       chainId: eip712.chainId.toString(),
       verifyingContract: token.address
     };
+
+    // ---- deployment / environment info ----
+    const hex = address => tronWeb.address.toHex(address);
+    log('================ TEST ENVIRONMENT ================');
+    log(`network:           ${NETWORK_NAME} (${IS_LOCAL ? 'local TRE' : 'public'}), node ${tronWeb.fullNode.host}`);
+    log(`contract:          MyTRC3009Token`);
+    log(`address (base58):  ${tronWeb.address.fromHex(token.address)}`);
+    log(`address (hex):     ${hex(token.address)}`);
+    try {
+      const deployment = MyTRC3009Token.networks && MyTRC3009Token.networks[MyTRC3009Token.network_id];
+      if (deployment && deployment.transactionHash) {
+        log(`deploy txid:       ${deployment.transactionHash}${txLink(deployment.transactionHash)}`);
+      }
+    } catch (err) {
+      log(`deploy txid:       unavailable (${err.message})`);
+    }
+    try {
+      const onChain = await tronWeb.trx.getContract(token.address);
+      log(`origin (deployer): ${tronWeb.address.fromHex(onChain.origin_address)}`);
+      log(`energy limit pct:  ${onChain.origin_energy_limit}  user fee pct: ${onChain.consume_user_resource_percent}`);
+    } catch (err) {
+      log(`on-chain contract info unavailable (${err.message})`);
+    }
+    log(`owner():           ${tronWeb.address.fromHex(await token.owner())}`);
+    log(`symbol / decimals: ${await token.symbol()} / ${(await token.decimals()).toString()}`);
+    log(`totalSupply():     ${(await token.totalSupply()).toString()}`);
+    log(`eip712 domain:     ${JSON.stringify({ ...domain, verifyingContract: tronWeb.address.fromHex(domain.verifyingContract) })}`);
+    log(`relayer / owner:   ${owner}  (hex ${hex(owner)})`);
+    log(`recipient:         ${recipient}`);
+    log(`authorizer (signer, generated): ${signer.address.base58}  (hex ${hex(signer.address.base58)})`);
+    log('==================================================');
+
+    // Fund the authorizer once for the whole suite (each mint costs a block wait on a public network).
+    await mint(signer.address.base58, MINT_AMOUNT);
+    log(`authorizer balance after funding: ${await balanceOf(signer.address.base58)}`);
   });
 
-  beforeEach(async () => {
-    // Make sure the authorizer holds enough tokens for each test.
-    await token.mint(signer.address.base58, MINT_AMOUNT);
+  beforeEach(function () {
+    // Mocha prints a test's title only once it finishes, so mark where each one starts.
+    console.log(`\n      ▶ ${this.currentTest.title}`);
   });
 
   describe('deployment and minting', () => {
@@ -136,7 +234,7 @@ contract('MyTRC3009Token', accounts => {
 
     it('lets the owner mint tokens', async () => {
       const before = BigInt(await balanceOf(recipient));
-      await token.mint(recipient, VALUE);
+      await mint(recipient, VALUE);
       assert.equal(await balanceOf(recipient), (before + BigInt(VALUE)).toString());
     });
   });
@@ -150,9 +248,7 @@ contract('MyTRC3009Token', accounts => {
       const toBefore = BigInt(await balanceOf(recipient));
       assert.equal(await token.authorizationState(auth.from, auth.nonce), false);
 
-      await token.transferWithAuthorization(
-        auth.from, auth.to, auth.value, auth.validAfter, auth.validBefore, auth.nonce, v, r, s
-      );
+      await transfer(auth, { v, r, s });
 
       assert.equal(await balanceOf(auth.from), (fromBefore - BigInt(VALUE)).toString());
       assert.equal(await balanceOf(recipient), (toBefore + BigInt(VALUE)).toString());
@@ -169,9 +265,7 @@ contract('MyTRC3009Token', accounts => {
       const fromBefore = BigInt(await balanceOf(auth.from));
       const toBefore = BigInt(await balanceOf(owner));
 
-      await token.receiveWithAuthorization(
-        auth.from, auth.to, auth.value, auth.validAfter, auth.validBefore, auth.nonce, v, r, s
-      );
+      await receive(auth, { v, r, s });
 
       assert.equal(await balanceOf(auth.from), (fromBefore - BigInt(VALUE)).toString());
       assert.equal(await balanceOf(owner), (toBefore + BigInt(VALUE)).toString());
@@ -186,7 +280,7 @@ contract('MyTRC3009Token', accounts => {
       const { v, r, s } = await sign('CancelAuthorization', { authorizer, nonce });
 
       assert.equal(await token.authorizationState(authorizer, nonce), false);
-      await token.cancelAuthorization(authorizer, nonce, v, r, s);
+      await cancel(authorizer, nonce, { v, r, s });
       assert.equal(await token.authorizationState(authorizer, nonce), true);
     });
   });
@@ -258,7 +352,7 @@ contract('MyTRC3009Token', accounts => {
         domain, { CancelAuthorization: TYPES.CancelAuthorization }, { authorizer, nonce }, other.privateKey
       );
       const { v, r, s } = splitSignature(signature);
-      await expectRevert(token.cancelAuthorization(authorizer, nonce, v, r, s), 'TRC3009InvalidSignature()');
+      await expectRevert(cancel(authorizer, nonce, { v, r, s }), 'TRC3009InvalidSignature()');
       assert.equal(await token.authorizationState(authorizer, nonce), false);
     });
 
@@ -267,13 +361,13 @@ contract('MyTRC3009Token', accounts => {
       await transfer(auth, await sign(TRANSFER, auth));
 
       const { v, r, s } = await sign('CancelAuthorization', { authorizer: auth.from, nonce: auth.nonce });
-      await expectRevert(token.cancelAuthorization(auth.from, auth.nonce, v, r, s), 'TRC3009UsedAuthorization(address,bytes32)');
+      await expectRevert(cancel(auth.from, auth.nonce, { v, r, s }), 'TRC3009UsedAuthorization(address,bytes32)');
     });
 
     it('transferWithAuthorization reverts after the authorization was canceled', async () => {
       const auth = authorization(recipient);
-      const cancel = await sign('CancelAuthorization', { authorizer: auth.from, nonce: auth.nonce });
-      await token.cancelAuthorization(auth.from, auth.nonce, cancel.v, cancel.r, cancel.s);
+      const cancelSig = await sign('CancelAuthorization', { authorizer: auth.from, nonce: auth.nonce });
+      await cancel(auth.from, auth.nonce, cancelSig);
 
       const balanceBefore = await balanceOf(auth.from);
       await expectRevert(transfer(auth, await sign(TRANSFER, auth)), 'TRC3009UsedAuthorization(address,bytes32)');
