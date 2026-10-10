@@ -1,0 +1,164 @@
+Compiling your contracts...
+===========================
+> Everything is up to date, there is nothing to compile.
+
+Deploying contracts to development network...
+Preparing JavaScript tests (if any)...
+
+
+  Contract: MyTRC3009Token
+         ================ TEST ENVIRONMENT ================
+         network:           nile (public), node https://nile.trongrid.io
+         contract:          MyTRC3009Token
+         address (base58):  TNTpTYGZQstkB2V4ZJfCDNKKzxv3yDEd1h
+         address (hex):     41890ac10554cc1f1b330bb9ef7aa81741621e00d7
+         deploy txid:       1317292089e09bdd2d7078e6dcd82bf8849061774bde1cbdadd41da67e19fc59  https://nile.tronscan.org/#/transaction/1317292089e09bdd2d7078e6dcd82bf8849061774bde1cbdadd41da67e19fc59
+         origin (deployer): TJDMQzjJSh5eC8WezVtnDXDuWXAwjV23eF
+         energy limit pct:  10000000  user fee pct: 100
+         owner():           TJDMQzjJSh5eC8WezVtnDXDuWXAwjV23eF
+         symbol / decimals: TKN3009 / 18
+         totalSupply():     0
+         eip712 domain:     {"name":"My3009Token","version":"1","chainId":"3448148188","verifyingContract":"TNTpTYGZQstkB2V4ZJfCDNKKzxv3yDEd1h"}
+         relayer / owner:   TJDMQzjJSh5eC8WezVtnDXDuWXAwjV23eF  (hex 415a6dda31161c0d055d4cde55dc33b6ea42611b28)
+         recipient:         TEzQXcyttZtdPFY8cMiSBdJ3N8A6T43nFL
+         authorizer (signer, generated): TVnrzE2wH39abWaYgagxzZvdTm7R2ur7Hr  (hex 41d96da61e7eb24a14fca493f225e5e37e62a61910)
+         ==================================================
+         [tx] mint txid: 9137a8fa1bb59e050652d03142ca8ec583f8b48c334a001d0d30b6db93029c43  https://nile.tronscan.org/#/transaction/9137a8fa1bb59e050652d03142ca8ec583f8b48c334a001d0d30b6db93029c43
+              block: 71686719  result: SUCCESS  energy: 42522  fee(sun): 346000
+         authorizer balance after funding: 1000000000000000000000
+    deployment and minting
+
+      ▶ has the expected metadata
+      ✔ has the expected metadata (200ms)
+
+      ▶ lets the owner mint tokens
+         [tx] mint txid: 6fa4daab6036998cbcffcb1ca26a831ef63d707560cdb85892fc146c715b6f3b  https://nile.tronscan.org/#/transaction/6fa4daab6036998cbcffcb1ca26a831ef63d707560cdb85892fc146c715b6f3b
+              block: 71686720  result: SUCCESS  energy: 27522  fee(sun): 346000
+      ✔ lets the owner mint tokens (2688ms)
+    transferWithAuthorization
+
+      ▶ transfers tokens with a valid signature and marks the nonce as used
+         [tx] transferWithAuthorization txid: 137dcb618583f7ad2540c6ae730e0a58f56226e521c2fd9ee18c923238cc9e10  https://nile.tronscan.org/#/transaction/137dcb618583f7ad2540c6ae730e0a58f56226e521c2fd9ee18c923238cc9e10
+              block: 71686721  result: SUCCESS  energy: 39101  fee(sun): 572000
+      ✔ transfers tokens with a valid signature and marks the nonce as used (3114ms)
+    receiveWithAuthorization
+
+      ▶ transfers tokens when the payee (msg.sender) submits the signature
+         [tx] receiveWithAuthorization txid: c14ac55f9fc0254f387b47f3c2b5009f115324a11958d103c02c1819b28e5c79  https://nile.tronscan.org/#/transaction/c14ac55f9fc0254f387b47f3c2b5009f115324a11958d103c02c1819b28e5c79
+              block: 71686722  result: SUCCESS  energy: 54174  fee(sun): 572000
+      ✔ transfers tokens when the payee (msg.sender) submits the signature (3052ms)
+    cancelAuthorization
+
+      ▶ cancels an unused authorization and marks the nonce as used
+         [tx] cancelAuthorization txid: 9d95b0d6feeaa1b7bccef5433d18f4cbcfff4f8efa39cfad7299c8ed42db9a54  https://nile.tronscan.org/#/transaction/9d95b0d6feeaa1b7bccef5433d18f4cbcfff4f8efa39cfad7299c8ed42db9a54
+              block: 71686723  result: SUCCESS  energy: 26219  fee(sun): 444000
+      ✔ cancels an unused authorization and marks the nonce as used (2738ms)
+    revert paths
+
+      ▶ transferWithAuthorization reverts when the authorization has expired
+         [tx] transferWithAuthorization txid: 09bb1e7d091b51276db3e75111bffbdb1bf51f958cc1a68716fdf8ad62a6ca13  https://nile.tronscan.org/#/transaction/09bb1e7d091b51276db3e75111bffbdb1bf51f958cc1a68716fdf8ad62a6ca13
+              block: 71686724  result: FAILED  energy: 4966  fee(sun): 572000
+         [revert] txid: 09bb1e7d091b51276db3e75111bffbdb1bf51f958cc1a68716fdf8ad62a6ca13
+              result: FAILED  receipt: REVERT  block: 71686724
+              expected: TRC3009InvalidAuthorizationTime(uint256,uint256) (selector 0x169485b2)
+              contractResult: 169485b200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
+      ✔ transferWithAuthorization reverts when the authorization has expired (2585ms)
+
+      ▶ transferWithAuthorization reverts when the authorization is not yet valid
+         [tx] transferWithAuthorization txid: d53dcfe185da904b967e18481f05a95457d3beb2ec519ffcc752b5f170a44ce0  https://nile.tronscan.org/#/transaction/d53dcfe185da904b967e18481f05a95457d3beb2ec519ffcc752b5f170a44ce0
+              block: 71686725  result: FAILED  energy: 4935  fee(sun): 572000
+         [revert] txid: d53dcfe185da904b967e18481f05a95457d3beb2ec519ffcc752b5f170a44ce0
+              result: FAILED  receipt: REVERT  block: 71686725
+              expected: TRC3009InvalidAuthorizationTime(uint256,uint256) (selector 0x169485b2)
+              contractResult: 169485b2000000000000000000000000000000000000000000000000000000ffffffffff0000000000000000000000000000000000000000000000000000010000000000
+      ✔ transferWithAuthorization reverts when the authorization is not yet valid (3700ms)
+
+      ▶ transferWithAuthorization reverts when the nonce is replayed
+         [tx] transferWithAuthorization txid: 1bca6c868c90828f63ebfec137d02a12f735ba2ba625edc3d2eab2a5b42d900e  https://nile.tronscan.org/#/transaction/1bca6c868c90828f63ebfec137d02a12f735ba2ba625edc3d2eab2a5b42d900e
+              block: 71686726  result: SUCCESS  energy: 39101  fee(sun): 572000
+         [tx] transferWithAuthorization txid: f53419443c2b5e5cbb2034d4a5fb37f0db682f48b7b9b629c10c027ee6b6ace0  https://nile.tronscan.org/#/transaction/f53419443c2b5e5cbb2034d4a5fb37f0db682f48b7b9b629c10c027ee6b6ace0
+              block: 71686727  result: FAILED  energy: 5198  fee(sun): 572000
+         [revert] txid: f53419443c2b5e5cbb2034d4a5fb37f0db682f48b7b9b629c10c027ee6b6ace0
+              result: FAILED  receipt: REVERT  block: 71686727
+              expected: TRC3009UsedAuthorization(address,bytes32) (selector 0x4477b46d)
+              contractResult: 4477b46d000000000000000000000000d96da61e7eb24a14fca493f225e5e37e62a619107c1cd11080d1592cae5f6878fd807d2fad2c98e3d6eff79e2ad3f1f0868ca4be
+      ✔ transferWithAuthorization reverts when the nonce is replayed (5235ms)
+
+      ▶ transferWithAuthorization reverts when the signer is not `from`
+         [tx] transferWithAuthorization txid: 0df506398ff0b9ab5f117696a705af04a8720635d8537a3c60ddd60d122f74f3  https://nile.tronscan.org/#/transaction/0df506398ff0b9ab5f117696a705af04a8720635d8537a3c60ddd60d122f74f3
+              block: 71686728  result: FAILED  energy: 4719  fee(sun): 572000
+         [revert] txid: 0df506398ff0b9ab5f117696a705af04a8720635d8537a3c60ddd60d122f74f3
+              result: FAILED  receipt: REVERT  block: 71686728
+              expected: TRC3009InvalidSignature() (selector 0x7f10c146)
+              contractResult: 7f10c146
+      ✔ transferWithAuthorization reverts when the signer is not `from` (3959ms)
+
+      ▶ transferWithAuthorization reverts when the signed fields are tampered with
+         [tx] transferWithAuthorization txid: c703746a029efb54188c2f23e043032ee4515ba268b77ce09d9e8c48176f6c47  https://nile.tronscan.org/#/transaction/c703746a029efb54188c2f23e043032ee4515ba268b77ce09d9e8c48176f6c47
+              block: 71686729  result: FAILED  energy: 4719  fee(sun): 572000
+         [revert] txid: c703746a029efb54188c2f23e043032ee4515ba268b77ce09d9e8c48176f6c47
+              result: FAILED  receipt: REVERT  block: 71686729
+              expected: TRC3009InvalidSignature() (selector 0x7f10c146)
+              contractResult: 7f10c146
+      ✔ transferWithAuthorization reverts when the signed fields are tampered with (2479ms)
+
+      ▶ transferWithAuthorization reverts when the authorizer has insufficient balance
+         [tx] transferWithAuthorization txid: 76f44d334d69d7fe5a0a08db43a0be22903eba67041fbf7fd34d8109abf20e62  https://nile.tronscan.org/#/transaction/76f44d334d69d7fe5a0a08db43a0be22903eba67041fbf7fd34d8109abf20e62
+              block: 71686730  result: FAILED  energy: 27151  fee(sun): 572000
+         [revert] txid: 76f44d334d69d7fe5a0a08db43a0be22903eba67041fbf7fd34d8109abf20e62
+              result: FAILED  receipt: REVERT  block: 71686730
+              expected: TRC20InsufficientBalance(address,uint256,uint256) (selector 0xd79d5967)
+              contractResult: d79d5967000000000000000000000000d96da61e7eb24a14fca493f225e5e37e62a619100000000000000000000000000000000000000000000000360c2789aae87400000000000000000000000000000000000000000000033b2e3c9fd0803ce8000000
+      ✔ transferWithAuthorization reverts when the authorizer has insufficient balance (2640ms)
+
+      ▶ receiveWithAuthorization reverts when the caller is not the payee
+         [tx] receiveWithAuthorization txid: 4a4833bef7d66e39aa063a839d8c44857676b7499db2516acb6c55b15a45bd01  https://nile.tronscan.org/#/transaction/4a4833bef7d66e39aa063a839d8c44857676b7499db2516acb6c55b15a45bd01
+              block: 71686731  result: FAILED  energy: 4797  fee(sun): 572000
+         [revert] txid: 4a4833bef7d66e39aa063a839d8c44857676b7499db2516acb6c55b15a45bd01
+              result: FAILED  receipt: REVERT  block: 71686731
+              expected: TRC20InvalidReceiver(address) (selector 0x8702316d)
+              contractResult: 8702316d0000000000000000000000003712aac5cd03063af43227a9bd1ee86be03ef841
+      ✔ receiveWithAuthorization reverts when the caller is not the payee (3776ms)
+
+      ▶ receiveWithAuthorization reverts when given a TransferWithAuthorization signature
+         [tx] receiveWithAuthorization txid: 01af792f94e4d62ecda40aadeae436cf52925bc03820fcae8c3a0bc90175642f  https://nile.tronscan.org/#/transaction/01af792f94e4d62ecda40aadeae436cf52925bc03820fcae8c3a0bc90175642f
+              block: 71686732  result: FAILED  energy: 4769  fee(sun): 572000
+         [revert] txid: 01af792f94e4d62ecda40aadeae436cf52925bc03820fcae8c3a0bc90175642f
+              result: FAILED  receipt: REVERT  block: 71686732
+              expected: TRC3009InvalidSignature() (selector 0x7f10c146)
+              contractResult: 7f10c146
+      ✔ receiveWithAuthorization reverts when given a TransferWithAuthorization signature (2468ms)
+
+      ▶ cancelAuthorization reverts when the signer is not the authorizer
+         [tx] cancelAuthorization txid: fa9a3112819ebc3cbbd82193de0fe9a727467f4ec33925f4f62c565459895907  https://nile.tronscan.org/#/transaction/fa9a3112819ebc3cbbd82193de0fe9a727467f4ec33925f4f62c565459895907
+              block: 71686733  result: FAILED  energy: 4310  fee(sun): 444000
+         [revert] txid: fa9a3112819ebc3cbbd82193de0fe9a727467f4ec33925f4f62c565459895907
+              result: FAILED  receipt: REVERT  block: 71686733
+              expected: TRC3009InvalidSignature() (selector 0x7f10c146)
+              contractResult: 7f10c146
+      ✔ cancelAuthorization reverts when the signer is not the authorizer (2594ms)
+
+      ▶ cancelAuthorization reverts when the nonce was already used
+         [tx] transferWithAuthorization txid: 649fe7177babc1ad7b83bdcc526f44d5820ac3f2d1f88fcf7775d7bdd2ef2ddf  https://nile.tronscan.org/#/transaction/649fe7177babc1ad7b83bdcc526f44d5820ac3f2d1f88fcf7775d7bdd2ef2ddf
+              block: 71686734  result: SUCCESS  energy: 39101  fee(sun): 572000
+         [tx] cancelAuthorization txid: d65ee3345958461c7038f1c8617544688916414ddc15734384d5d1c4ed330b81  https://nile.tronscan.org/#/transaction/d65ee3345958461c7038f1c8617544688916414ddc15734384d5d1c4ed330b81
+              block: 71686735  result: FAILED  energy: 4543  fee(sun): 444000
+         [revert] txid: d65ee3345958461c7038f1c8617544688916414ddc15734384d5d1c4ed330b81
+              result: FAILED  receipt: REVERT  block: 71686735
+              expected: TRC3009UsedAuthorization(address,bytes32) (selector 0x4477b46d)
+              contractResult: 4477b46d000000000000000000000000d96da61e7eb24a14fca493f225e5e37e62a6191067eb996b5f7f3f727f18b00c0a4ac29d744b5b92051d57f8bd579da54bbaf011
+      ✔ cancelAuthorization reverts when the nonce was already used (6164ms)
+
+      ▶ transferWithAuthorization reverts after the authorization was canceled
+         [tx] cancelAuthorization txid: 5e2a7db4fa06c8518051983443c5099a1a942ae78a9f650f3d4fe5e5258f5db6  https://nile.tronscan.org/#/transaction/5e2a7db4fa06c8518051983443c5099a1a942ae78a9f650f3d4fe5e5258f5db6
+              block: 71686736  result: SUCCESS  energy: 26219  fee(sun): 444000
+         [tx] transferWithAuthorization txid: 2c44ed13270eb8eeb87ebbf2de2764085656be015b6dfc08feab7a91b66a7242  https://nile.tronscan.org/#/transaction/2c44ed13270eb8eeb87ebbf2de2764085656be015b6dfc08feab7a91b66a7242
+              block: 71686737  result: FAILED  energy: 5198  fee(sun): 572000
+         [revert] txid: 2c44ed13270eb8eeb87ebbf2de2764085656be015b6dfc08feab7a91b66a7242
+              result: FAILED  receipt: REVERT  block: 71686737
+              expected: TRC3009UsedAuthorization(address,bytes32) (selector 0x4477b46d)
+              contractResult: 4477b46d000000000000000000000000d96da61e7eb24a14fca493f225e5e37e62a61910a82844dc7b343aae0e18cfc3cc8713d963d2cc77ee505fcc2163064e7312353d
+      ✔ transferWithAuthorization reverts after the authorization was canceled (6383ms)
+
+
+  16 passing (58s)
