@@ -27,6 +27,7 @@ contract('MyTRC3009Token', accounts => {
   const MINT_AMOUNT = '1000000000000000000000'; // 1000 tokens (18 decimals)
   const VALUE = '1000000000000000000'; // 1 token
   const FAR_FUTURE = 2 ** 40; // below the 2^47 block-range flag, so the timestamp clock is used
+  const now = new Date();     // Create a Date object for the current moment
 
   const TYPES = {
     TransferWithAuthorization: [
@@ -172,7 +173,7 @@ contract('MyTRC3009Token', accounts => {
 
   before(async () => {
     token = await MyTRC3009Token.deployed();
-    signer = await require('tronweb').TronWeb.createAccount();
+    signer = await require('tronweb').TronWeb.createAccount();    //Creates a fresh new account for every run, in a real time environment this is the authorizer (user) signing the message.
 
     // Read the domain from the contract so the chainId always matches the network under test.
     const eip712 = await token.eip712Domain();
@@ -186,6 +187,7 @@ contract('MyTRC3009Token', accounts => {
     // ---- deployment / environment info ----
     const hex = address => tronWeb.address.toHex(address);
     log('================ TEST ENVIRONMENT ================');
+    log(`Date: ${isoString = now.toISOString()}`);
     log(`network:           ${NETWORK_NAME} (${IS_LOCAL ? 'local TRE' : 'public'}), node ${tronWeb.fullNode.host}`);
     log(`contract:          MyTRC3009Token`);
     log(`address (base58):  ${tronWeb.address.fromHex(token.address)}`);

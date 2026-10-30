@@ -28,7 +28,7 @@ const domain = {
     chainId: 0xcd8690dc,        // TRON Nile testnet
     // chainId: 0x2b6653dc,        //TRON Mainnet
     //chainId: 0x94a9059e,        //TRON Shasta testnet                      
-    verifyingContract: "TGcS9Rvkpdh1vum2ZNQUxMB1DJ533reHdX"     //Your ERC3009 token address after deployment here
+    verifyingContract: "TGf7MqGW2TpqbgCVdbQaP598mbLcevybMS"     //Your TRC3009 token address after deployment here
 };
 
 const types = {

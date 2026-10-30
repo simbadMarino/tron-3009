@@ -9,8 +9,8 @@ import {TIP712} from "@openzeppelin/tron-contracts/utils/cryptography/TIP712.sol
 contract MyTRC3009Token is TRC20, TRC3009, Ownable {
     constructor()
         //address initialOwner
-        TRC20("My3009Token", "TKN3009")
-        TIP712("My3009Token", "1")
+        TRC20("My3009Token", "TKN3009") //Adjust tokenName and token symbol as needed
+        TIP712("My3009Token", "1") // TIP712 TokenName param must match with TRC20 named param, Version must be "1" unless there is a new future version
         Ownable(msg.sender)
     {}
 
